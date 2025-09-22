@@ -3,7 +3,9 @@
 #include<memory.h>
 #include<string.h>
 #define int long long // works with 64 bit target
-		      //
+
+enum { LEA, IMM, JMP, CALL, JZ, JNZ, ENT, ADJ, LEV, LI, LC, SI, SC, PUSH, OR, XOR, AND, EQ, NE, LT, GT, LE, GE, SHL, SHR, ADD, SUB, MUL, DIV, MOD, OPEN, READ, CLOS, PRTF,MALC, MSET, MCMP, EXIT };
+
 int token;
 char *src, *old_src;
 int poolsize;
@@ -27,10 +29,21 @@ void program() {
 }
 
 int eval() {
+	int op, *tmp;
+	while(1) {
+		op = *pc++;
+		if (op ==IMM)		{ax = *pc++;}
+		else if (op ==LC)	{ax = *(char *)ax;}
+		else if (op ==LI)	{ax = *(int *)ax;}
+		else if (op ==SC)	{ax = *(char *)*sp++ = ax;}
+		else if (op ==SI)	{*(int *)*sp++ = ax;}
+	}
+
 	return 0;
 }
 
 int main(int argc, char **argv) {
+	close(fd);
 	int i, fd;
 
 	argc--;
@@ -43,10 +56,24 @@ int main(int argc, char **argv) {
 		printf("could not open(%s)\n", poolsize);
 		return -1;
 	}
+	if (!(text = old_text = malloc(poolsize))) {
+		printf("could not malloc(%d) for data area \n", poolsize);
+		return -1;
+	}
+	if (!(stack = malloc(poolsize))) {
+		printf("could not malloc(%d) for stack area\n", poolsize);
+		return -1;
+	}
+	
+	memset(text, 0, poolsize);
+	memset(data, 0, poolsize);
+	memset(stack, 0, poolsize);
 
 	src[i] =0;
 	close(fd);
 
+	bp = sp = (int *)((int)stack + poolsize);
+	ax = 0;
 	program();
 	return eval();
 }
